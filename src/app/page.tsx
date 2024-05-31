@@ -1,7 +1,36 @@
 import Image from "next/image";
 import styles from "./page.module.css";
 
+// import React, {useState, useEffect} from "react";
+
 export default function Home() {
+
+  let width = 0;//window.innerWidth;
+  let height = 0;//window.innerHeight;
+
+  const handleResize = () => {
+    debugger;
+    width = window.innerWidth;
+    height = window.innerHeight;
+  };
+
+  return (
+    <main className={styles.main}>
+      <div className={styles.screen}></div>
+      <div className={styles.controls}>
+        <div className={styles.dpad}>
+          <button className={`${styles.gameboy_button} ${styles.directional_button} ${styles.up_button}`}>U</button>
+          <button className={`${styles.gameboy_button} ${styles.directional_button} ${styles.right_button}`}>R</button>
+          <button className={`${styles.gameboy_button} ${styles.directional_button} ${styles.left_button}`}>L</button>
+          <button className={`${styles.gameboy_button} ${styles.directional_button} ${styles.down_button}`}>D</button>
+        </div>
+        <div className={styles.ab}>
+          <button className={`${styles.gameboy_button} ${styles.a_button}`}>A</button>
+          <button className={`${styles.gameboy_button} ${styles.b_button}`}>B</button>
+        </div>
+      </div>
+    </main>
+  );
   return (
     <main className={styles.main}>
       <div className={styles.description}>
