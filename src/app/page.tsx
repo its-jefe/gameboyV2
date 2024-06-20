@@ -1,27 +1,20 @@
 import Image from "next/image";
 import styles from "./page.module.css";
-import Dpad from "./Dpad/dpad"
 
-// import React, {useState, useEffect} from "react";
+import Gameboy from "./Gameboy/gameboy";
+
+// const handleMouseLeave =  (e: MouseEvent<HTMLDivElement>) => {
+//   // let target = e.currentTarget;
+//   // target.style.transform = `translateZ(4vw)`;
+// }
+
+// USER THIS FOR THE DPAD
+// https://stackoverflow.com/questions/74048836/in-javascript-is-there-a-click-and-drag-event-listener-for-mobiles
 
 export default function Home() {
   return (
     <main className={styles.main}>
-      <canvas className={styles.screen}>
-      </canvas>
-      <Dpad />
-      <div className={styles.ab}>
-        <button className={`${styles.a_button}`}>
-          <div className={`${styles.a_button_top}`}>
-            <span>A</span>
-          </div>
-        </button>
-        <button className={`${styles.b_button}`}>
-          <div className={`${styles.b_button_top}`}>
-            <span>B</span>
-          </div>
-        </button>
-      </div>
+      <Gameboy/>
     </main>
   );
   return (
