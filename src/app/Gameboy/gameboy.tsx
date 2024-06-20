@@ -5,17 +5,25 @@ import Dpad from "../Dpad/dpad"
 import styles from "../page.module.css";
 // import { userAgent } from "next/server";
 
+type Screen = {
+  canvasRef: HTMLCanvasElement | null,
+  canvas: HTMLCanvasElement | null,
+  size: number
+}
+
 type Snake = {
   size: number,
   x: number,
   y: number,
   tail: number
+  init: boolean
 }
 
 type Food = {
   size: number,
   x: number,
   y: number,
+  init: boolean
 }
 
 const handleMouseLeave = (e: MouseEvent<HTMLDivElement>) => {
@@ -29,7 +37,7 @@ const handleMouseLeave = (e: MouseEvent<HTMLDivElement>) => {
 export default function Gameboy() {
   const handleResize = useCallback(
     (e: Event) => {
-      sizeCanvas();
+      sizeCanvas(); // dont want this to reset x.y values on the snake
 
       if (!context || !squareCanvasSize || !snakeHeadSize) { return }
 
@@ -48,8 +56,6 @@ export default function Gameboy() {
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [squareCanvasSize, setSquareCanvasSize] = useState<number | null>(null)
 
-  const [snake, setSnake] = useState<Snake | null>(null);
-  
   const [snakeHeadSize, setSnakeHeadSize] = useState<number | null>(null)
   // const [food, setFood] = useState
 
@@ -61,8 +67,22 @@ export default function Gameboy() {
   const [pos, setPos] = useState({
     init: false,
     x: 0,
-    y: 0  
+    y: 0
   })
+
+  const snake: Snake = {
+    size: 0,
+    x: 0,
+    y: 0,
+    init: false
+  }
+
+  const food: Food = {
+    size: 0,
+    x: 0,
+    y: 0,
+    init: false
+  }
 
   let direction: string | null = null;
 
@@ -73,9 +93,15 @@ export default function Gameboy() {
 
     sizeCanvas();
 
-    if (!context || !squareCanvasSize || !snakeHeadSize) { return }
 
-    context.fillStyle = "blue";
+    init();
+
+
+  },);
+
+  function init() {
+
+    if (!context || !squareCanvasSize || !snakeHeadSize) { return }
 
     if (pos.init == false) {
       setPos({
@@ -84,9 +110,13 @@ export default function Gameboy() {
         y: (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0
       });
     }
-
+    context.fillStyle = "blue";
     context.fillRect(pos.x, pos.y, snakeHeadSize, snakeHeadSize);
-  }, );
+
+    food.size = snakeHeadSize * .75;
+    context.fillStyle = "red";
+    context.fillRect(food.x, food.y, food.size, food.size);
+  }
 
   function sizeCanvas() {
     var canvasContainer = document.getElementById("Screen_Nest");
