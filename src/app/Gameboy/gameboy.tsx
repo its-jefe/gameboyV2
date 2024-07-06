@@ -38,26 +38,28 @@ class Coordinates {
 
 class Snake {
   size: number = 0;
-  coords: Coordinates = {x: 0, y: 0};
+  coords: Coordinates = { x: 0, y: 0 };
   initialized: boolean = false;
   tail: Tail[] = new Array();
   direction: string | null = null;
-  center: any = { x: 0, y: 0};
+  moveHistory: Coordinates[] = new Array() // I cannot rely on this in the instance that food is gathered before 50 moves/frames
 }
+
+// TODO: Will need to allow the tail elements to move off of the length of this array ... 
+// each time the headm moves .. a value is a added to this list.
 
 class Tail {
   size: number = 0;
-  coords: Coordinates = {x: 0, y: 0};
+  coords: Coordinates = { x: 0, y: 0 };
   initialized: boolean = false;
   direction: string | null = null;
-  center: any = { x: 0, y: 0};
   parent: Snake | Tail | null = null;
   parentTracker: Coordinates[] = new Array();
 }
 
 class Food {
   size: number = 0;
-  coords: Coordinates = {x: 0, y: 0};
+  coords: Coordinates = { x: 0, y: 0 };
   init: boolean = false;
 }
 
@@ -144,26 +146,32 @@ export default function Gameboy() {
     snake.size = snake.size;
 
     if (start) {
-      let updateCoords : Coordinates = {
+      let updateCoords: Coordinates = {
         x: ((((snake.coords.x + (x)) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize),
         y: ((((snake.coords.y + (y)) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize)
-      } 
-      snake.coords = updateCoords;
+      }
 
-      var i = 0;
+      snake.coords = updateCoords;
+      // if (snake.moveHistory.length == 30) {
+      //   debugger;
+      //   snake.moveHistory.shift();
+      // }
+      snake.moveHistory.push(updateCoords);
+
+      let i = 0;
       snake.tail.forEach((tail) => {
-        drawTail(tail, i++);
+        debugger;
+        drawTail(tail, i);
+        i += 1;
       })
     }
     else if (!snake.initialized) {
       // init
       if (maxRender != null && minRender != null) {
-        let initCoords : Coordinates = {
+        let initCoords: Coordinates = {
           x: Math.random() * (maxRender - minRender) + minRender,
           y: Math.random() * (maxRender - minRender) + minRender,
         };
-
-        let initCoordsArr : Coordinates[] = new Array(initCoords);
 
         setSnake({
           size: snake.size,
@@ -171,7 +179,7 @@ export default function Gameboy() {
           initialized: true,
           tail: snake.tail,
           direction: snake.direction,
-          center: snake.center,
+          moveHistory: new Array()
         })
       }
     }
@@ -241,7 +249,9 @@ export default function Gameboy() {
 
       if (withinX && withinY) {
         let newTail = new Tail();
-        snake.tail.push(new Tail());
+
+        newTail.parent = snake.tail.length == 0 ? snake : snake.tail[snake.tail.length - 1];
+        snake.tail.push(newTail);
 
         // on snake collision 
         food.size = snake.size * .75;
@@ -257,33 +267,12 @@ export default function Gameboy() {
   function drawTail(tail: Tail, index: number) {
     if (!context || !squareCanvasSize || !snake.size) { return }
 
-    // if tail index = 0 ... head is the reference 
-    // else tail i - 1 == reference 
+    let history = snake.moveHistory;
+    let size = snake.moveHistory.length;
+    let point = history[size - ((index + 1) * 13) ] // this is just for testing and this will not work below 50
 
-    let parent : Snake | Tail = (index == 0) ? snake : snake.tail[index - 1];
-    let self : Tail = snake.tail[index];
-
-    var tailSize = snake.size ; // * 0.95;
-
-    // if (snake.direction == "U") {
-    //   tailY = reference.y + reference.size + 2;
-    //   tailX = reference.x;
-    // }
-    // if (snake.direction == "D") {
-    //   tailY = reference.y - reference.size - 2;
-    //   tailX = reference.x;
-    // }
-    // if (snake.direction == "L") {
-    //   tailX = reference.x + reference.size + 2;
-    //   tailY = reference.y;
-    // }
-    // if (snake.direction == "R") {
-    //   tailX = reference.x - reference.size - 2;
-    //   tailY = reference.y;
-    // }
-
-    context.fillStyle = "grey";
-    // context.fillRect(tailX, tailY, tailSize, tailSize);
+    context.fillStyle = "green";
+    context.fillRect(point.x, point.y, snake.size, snake.size);
   }
 
   function updateDirection(data: string) {
