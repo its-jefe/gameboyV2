@@ -1,49 +1,63 @@
 'use client'
 
+/* 
+  THOUGHTS 
+
+  1. Maybe don't allow the snake to turn back onto itself .. 
+    - Just like you can't turn the exact opposite direction .. 
+    - Since it can turn on a dime... it can turn onto itself if it is allowed to... 
+      - This will cause it to overlap and honestly differenciating between that and the snake running into itself might be difficult.
+      - And this may look bad ... 
+  
+  - The snake should not grow in sections ... 
+    - It should just be one long rectngle 
+
+  TODO: 
+  
+  - figure out how much needs to be stored ( is this based on tail size )
+  - and then start to pop the values from the array ...
+  
+  - TRY : From the second the food gets picked up and the tail is added ... start tracking head the head or tail parent 
+    - Track these movements down from head ... not exactly sure how many moves ahead I need to track 
+      - Maybe I need to do this dynamically and grab the coordinates that the head is on when it collects the food 
+*/
+
 import React, { useState, useEffect, useReducer, useCallback, useRef, MouseEvent } from "react";
 import Dpad from "../Dpad/dpad"
 import styles from "../page.module.css";
 // import { userAgent } from "next/server";
 
-// type Screen = {
-//   canvasRef: HTMLCanvasElement | null,
-//   canvas: HTMLCanvasElement | null,
-//   size: number
-// }
+function calcCenter(x: number, y: number, size: number) {
+  return { x: x + size / 2, y: y + size / 2 }
+}
 
-// type Snake = {
-//   size: number,
-//   x: number,
-//   y: number,
-//   tail: number,
-//   init: boolean
-// }
-
-class Snake {
-  constructor(public parent : Snake | null = null) {
-    if (parent != null) {
-      this.parent = parent;
-      this.id = parent.id + 1;
-    }
-  }
-  id: number = 0;
-  size: number = 0;
+class Coordinates {
   x: number = 0;
   y: number = 0;
+}
+
+class Snake {
+  size: number = 0;
+  coords: Coordinates = {x: 0, y: 0};
   initialized: boolean = false;
-  init = () => {
+  tail: Tail[] = new Array();
+  direction: string | null = null;
+  center: any = { x: 0, y: 0};
+}
 
-  };
-  tail: Snake | null = null;
-  draw = () => {
-
-  };
+class Tail {
+  size: number = 0;
+  coords: Coordinates = {x: 0, y: 0};
+  initialized: boolean = false;
+  direction: string | null = null;
+  center: any = { x: 0, y: 0};
+  parent: Snake | Tail | null = null;
+  parentTracker: Coordinates[] = new Array();
 }
 
 class Food {
   size: number = 0;
-  x: number = 0;
-  y: number = 0;
+  coords: Coordinates = {x: 0, y: 0};
   init: boolean = false;
 }
 
@@ -66,7 +80,7 @@ export default function Gameboy() {
 
   //     context.fillStyle = "blue";
 
-  //     context.fillRect(snake.x, snake.y, snake.size, snake.size);
+  //     context.fillRect(snake.coords.x, snake.coords.y, snake.size, snake.size);
   //   }, [])
 
   // if (typeof window !== "undefined") {
@@ -93,7 +107,6 @@ export default function Gameboy() {
 
   let minRender: number = 0;
   let maxRender: number | null = (squareCanvasSize != null && snake.size != null) ? squareCanvasSize - snake.size : null;
-  let direction: string | null = null;
 
   function sizeCanvas() {
     var canvasContainer = document.getElementById("Screen_Nest");
@@ -131,56 +144,61 @@ export default function Gameboy() {
     snake.size = snake.size;
 
     if (start) {
-      snake.x = ((((snake.x + (x)) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize);
-      snake.y = ((((snake.y + (y)) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize);
+      let updateCoords : Coordinates = {
+        x: ((((snake.coords.x + (x)) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize),
+        y: ((((snake.coords.y + (y)) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize)
+      } 
+      snake.coords = updateCoords;
 
-      // if i made the tail of type snake . and each snake had its own tail . 
-      // I could probably run a nice chain that way
-      // so each snake would manage its own tail .. etc etc .. 
-      if (snake.tail != null) {
-        drawTail();
-      }
+      var i = 0;
+      snake.tail.forEach((tail) => {
+        drawTail(tail, i++);
+      })
     }
-    else if (!snake.init) {
+    else if (!snake.initialized) {
       // init
       if (maxRender != null && minRender != null) {
-        setSnake({
-          id: 0,
-          parent: null,
-          size: snake.size,
+        let initCoords : Coordinates = {
           x: Math.random() * (maxRender - minRender) + minRender,
           y: Math.random() * (maxRender - minRender) + minRender,
+        };
+
+        let initCoordsArr : Coordinates[] = new Array(initCoords);
+
+        setSnake({
+          size: snake.size,
+          coords: initCoords,
           initialized: true,
-          tail: null,
-          init(){},
-          draw(){}
+          tail: snake.tail,
+          direction: snake.direction,
+          center: snake.center,
         })
       }
     }
 
     context.fillStyle = "blue";
-    context.fillRect(snake.x, snake.y, snake.size, snake.size);
+    context.fillRect(snake.coords.x, snake.coords.y, snake.size, snake.size);
 
     let yPeek = false;
     let xPeek = false;
 
-    if (snake.x > squareCanvasSize - snake.size) {
+    if (snake.coords.x > squareCanvasSize - snake.size) {
       xPeek = true;
       // context.fillStyle = "purple";
-      context.fillRect(0 - (squareCanvasSize - snake.x), snake.y, snake.size, snake.size);
+      context.fillRect(0 - (squareCanvasSize - snake.coords.x), snake.coords.y, snake.size, snake.size);
     }
 
-    if (snake.y > squareCanvasSize - snake.size) {
+    if (snake.coords.y > squareCanvasSize - snake.size) {
       yPeek = true;
       // context.fillStyle = "purple";
-      context.fillRect(snake.x, 0 - (squareCanvasSize - snake.y), snake.size, snake.size);
+      context.fillRect(snake.coords.x, 0 - (squareCanvasSize - snake.coords.y), snake.size, snake.size);
     }
 
     if (xPeek && yPeek) {
       // need a 3rd extra renderer to fill the missing diagonal corner...
       // will this always be the 0,0 corder? I think so ...
       // context.fillStyle = "purple";
-      context.fillRect(0 - (squareCanvasSize - snake.x), 0 - (squareCanvasSize - snake.y), snake.size, snake.size);
+      context.fillRect(0 - (squareCanvasSize - snake.coords.x), 0 - (squareCanvasSize - snake.coords.y), snake.size, snake.size);
     }
   }
 
@@ -196,87 +214,95 @@ export default function Gameboy() {
       // init
       setFood({
         size: snake.size * .75,
-        x: (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0,
-        y: (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0,
+        coords: {
+          x: (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0,
+          y: (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0,
+        },
         init: true
       });
     }
     else { // CALC THE BOUNDS
       var foodBounds = {
-        top: food.y,
-        bottom: food.y + food.size,
-        left: food.x,
-        right: food.x + food.size
+        top: food.coords.y,
+        bottom: food.coords.y + food.size,
+        left: food.coords.x,
+        right: food.coords.x + food.size
       };
 
       var snakeBounds = {
-        top: snake.y,
-        bottom: snake.y + snake.size,
-        left: snake.x,
-        right: snake.x + snake.size
+        top: snake.coords.y,
+        bottom: snake.coords.y + snake.size,
+        left: snake.coords.x,
+        right: snake.coords.x + snake.size
       }
 
       var withinX = (snakeBounds.left <= foodBounds.right && snakeBounds.right >= foodBounds.left)
       var withinY = (snakeBounds.top <= foodBounds.bottom && snakeBounds.bottom >= foodBounds.top)
 
       if (withinX && withinY) {
-        snake.tail = new Snake;
+        let newTail = new Tail();
+        snake.tail.push(new Tail());
 
         // on snake collision 
         food.size = snake.size * .75;
-        food.x = (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0;
-        food.y = (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0;
+        food.coords.x = (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0;
+        food.coords.y = (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0;
       }
     }
 
     context.fillStyle = "red";
-    context.fillRect(food.x, food.y, food.size, food.size);
+    context.fillRect(food.coords.x, food.coords.y, food.size, food.size);
   }
 
-  function drawTail() {
+  function drawTail(tail: Tail, index: number) {
     if (!context || !squareCanvasSize || !snake.size) { return }
 
-    var tailX = 0;
-    var tailY = 0;
+    // if tail index = 0 ... head is the reference 
+    // else tail i - 1 == reference 
 
-    if (direction == "U") {
-      tailY = snake.y + snake.size;
-      tailX = snake.x;
-    }
-    if (direction == "D") {
-      tailY = snake.y - snake.size;
-      tailX = snake.x;
-    }
-    if (direction == "L") {
-      tailX = snake.x + snake.size;
-      tailY = snake.y;
-    }
-    if (direction == "R") {
-      tailX = snake.x - snake.size;
-      tailY = snake.y;
-    }
+    let parent : Snake | Tail = (index == 0) ? snake : snake.tail[index - 1];
+    let self : Tail = snake.tail[index];
+
+    var tailSize = snake.size ; // * 0.95;
+
+    // if (snake.direction == "U") {
+    //   tailY = reference.y + reference.size + 2;
+    //   tailX = reference.x;
+    // }
+    // if (snake.direction == "D") {
+    //   tailY = reference.y - reference.size - 2;
+    //   tailX = reference.x;
+    // }
+    // if (snake.direction == "L") {
+    //   tailX = reference.x + reference.size + 2;
+    //   tailY = reference.y;
+    // }
+    // if (snake.direction == "R") {
+    //   tailX = reference.x - reference.size - 2;
+    //   tailY = reference.y;
+    // }
 
     context.fillStyle = "grey";
-    context.fillRect(tailX, tailY, snake.size, snake.size);
+    // context.fillRect(tailX, tailY, tailSize, tailSize);
   }
 
   function updateDirection(data: string) {
     setStart(true);
 
-    if (!direction) {
+    if (!snake.direction) {
       animate();
     }
 
-    if (direction == "L" && data == "R") return;
-    if (direction == "R" && data == "L") return;
-    if (direction == "U" && data == "D") return;
-    if (direction == "D" && data == "U") return;
+    if (snake.direction == "L" && data == "R") return;
+    if (snake.direction == "R" && data == "L") return;
+    if (snake.direction == "U" && data == "D") return;
+    if (snake.direction == "D" && data == "U") return;
 
     // this needs to update the dpad visual instead of the dpad itself... 
     // because now you may have pressed a direction and not be allowed to go that way... 
     // Or maybe it will turn that side red...  
 
-    direction = data;
+    snake.direction = data;
   }
 
   function animate() {
@@ -287,9 +313,9 @@ export default function Gameboy() {
     var x = 0;
     var y = 0;
 
-    var modifier = 300;
+    var modifier = 200;
 
-    switch (direction) {
+    switch (snake.direction) {
       case "L":
         x = -squareCanvasSize / modifier;
         break;
