@@ -8,24 +8,27 @@ export default function DPad({sendDirectionToGameboy}: any) {
   // fix the interchange of mouse and keys. it resets the ui ... niche git
   // make sure the button pressure effect relates to the active direction when no mouse is over
 
-  document.addEventListener("keydown", (e: KeyboardEvent) => {
-    var keyCode = e.code;
+  // if (document != null) {
+  //   document.addEventListener("keydown", (e: KeyboardEvent) => {
+  //     var keyCode = e.code;
+  
+  //     switch (keyCode) {
+  //       case "ArrowLeft" /* LEFT */: 
+  //         handleInput("L");
+  //       break;
+  //       case "ArrowUp" /* UP */: 
+  //         handleInput("U");
+  //       break;
+  //       case "ArrowRight" /* RIGHT */: 
+  //         handleInput("R");
+  //       break;
+  //       case "ArrowDown" /* DOWN */:
+  //         handleInput("D"); 
+  //       break;
+  //     }
+  //   })
+  // }
 
-    switch (keyCode) {
-      case "ArrowLeft" /* LEFT */: 
-        handleInput("L");
-      break;
-      case "ArrowUp" /* UP */: 
-        handleInput("U");
-      break;
-      case "ArrowRight" /* RIGHT */: 
-        handleInput("R");
-      break;
-      case "ArrowDown" /* DOWN */:
-        handleInput("D"); 
-      break;
-    }
-  })
 
   let currentDir = "";
   let percentX = 0;

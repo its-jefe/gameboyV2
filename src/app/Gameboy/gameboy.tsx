@@ -135,8 +135,6 @@ export default function Gameboy() {
     snake.size = (screenAverage * .06);
     setSquareCanvasSize(screenAverage);
 
-    debugger;
-
     //i.e. value other than null or undefined
     if (canvasRef.current) {
       canvasRef.current.height = h;
@@ -319,7 +317,6 @@ export default function Gameboy() {
 
       if (withinX && withinY) {
         stop = true;
-        debugger;
       }
     }
 
@@ -379,9 +376,8 @@ export default function Gameboy() {
     if (start && stop == false) {
       requestAnimationFrame(animate);
     }
-    else if (stop == true) {
-      debugger;
-    }
+    // else if (stop == true) {
+    // }
   }
 
   return (

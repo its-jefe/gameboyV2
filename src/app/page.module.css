@@ -342,7 +342,7 @@
     position: relative;
     justify-content: center;
     column-gap: 7.5%;
-    align-items: end;
+    align-items: flex-end;
     width: 100%;
     height: 4%;
     order: 4;
