@@ -27,18 +27,22 @@ import Dpad from "../Dpad/dpad"
 import styles from "../page.module.css";
 // import { userAgent } from "next/server";
 
-function calcCenter(x: number, y: number, size: number) {
-  return { x: x + size / 2, y: y + size / 2 }
-}
-
 class Coordinates {
   x: number = 0;
   y: number = 0;
 }
 
+class Boundaries {
+  top: number = 0;
+  bottom: number = 0;
+  left: number = 0;
+  right: number = 0;
+}
+
 class Snake {
   size: number = 0;
   coords: Coordinates = { x: 0, y: 0 };
+  bounds: Boundaries = new Boundaries();
   initialized: boolean = false;
   tail: Tail[] = new Array();
   direction: string | null = null;
@@ -51,6 +55,7 @@ class Snake {
 class Tail {
   size: number = 0;
   coords: Coordinates = { x: 0, y: 0 };
+  bounds: Boundaries = new Boundaries();
   initialized: boolean = false;
   direction: string | null = null;
   parent: Snake | Tail | null = null;
@@ -72,6 +77,9 @@ const handleMouseLeave = (e: MouseEvent<HTMLDivElement>) => {
 // https://stackoverflow.com/questions/74048836/in-javascript-is-there-a-click-and-drag-event-listener-for-mobiles
 
 export default function Gameboy() {
+
+  var stop = false;
+  var modifier = 70;
 
   /* // Resize functionality 
   // const handleResize = useCallback(
@@ -143,8 +151,6 @@ export default function Gameboy() {
   function updateSnake(x: number, y: number) {
     if (!context || !squareCanvasSize || !snake.size) { return }
 
-    snake.size = snake.size;
-
     if (start) {
       let updateCoords: Coordinates = {
         x: ((((snake.coords.x + (x)) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize),
@@ -158,9 +164,15 @@ export default function Gameboy() {
       // }
       snake.moveHistory.push(updateCoords);
 
+      snake.bounds = {
+        top: snake.coords.y,
+        bottom: snake.coords.y + snake.size,
+        left: snake.coords.x,
+        right: snake.coords.x + snake.size
+      }
+
       let i = 0;
       snake.tail.forEach((tail) => {
-        debugger;
         drawTail(tail, i);
         i += 1;
       })
@@ -176,6 +188,7 @@ export default function Gameboy() {
         setSnake({
           size: snake.size,
           coords: initCoords,
+          bounds: snake.bounds,
           initialized: true,
           tail: snake.tail,
           direction: snake.direction,
@@ -230,6 +243,9 @@ export default function Gameboy() {
       });
     }
     else { // CALC THE BOUNDS
+
+      // TODO: Apply boundary math to these ...
+
       var foodBounds = {
         top: food.coords.y,
         bottom: food.coords.y + food.size,
@@ -237,15 +253,8 @@ export default function Gameboy() {
         right: food.coords.x + food.size
       };
 
-      var snakeBounds = {
-        top: snake.coords.y,
-        bottom: snake.coords.y + snake.size,
-        left: snake.coords.x,
-        right: snake.coords.x + snake.size
-      }
-
-      var withinX = (snakeBounds.left <= foodBounds.right && snakeBounds.right >= foodBounds.left)
-      var withinY = (snakeBounds.top <= foodBounds.bottom && snakeBounds.bottom >= foodBounds.top)
+      var withinX = (snake.bounds.left <= foodBounds.right && snake.bounds.right >= foodBounds.left)
+      var withinY = (snake.bounds.top <= foodBounds.bottom && snake.bounds.bottom >= foodBounds.top)
 
       if (withinX && withinY) {
         let newTail = new Tail();
@@ -268,11 +277,47 @@ export default function Gameboy() {
     if (!context || !squareCanvasSize || !snake.size) { return }
 
     let history = snake.moveHistory;
-    let size = snake.moveHistory.length;
-    let point = history[size - ((index + 1) * 13) ] // this is just for testing and this will not work below 50
+    let historySize = snake.moveHistory.length;
 
-    context.fillStyle = "green";
-    context.fillRect(point.x, point.y, snake.size, snake.size);
+    // can i spread them out by size of snake head and snake tail? 
+
+    let lookback = historySize - ((index + 5));
+
+    let point = history[lookback]; // this is just for testing and this will not work below 50
+
+    context.fillStyle = "skyblue";
+
+    tail.size = snake.size * 0.8;
+
+    let difference = snake.size - tail.size;
+
+    tail.coords = {
+      x: point.x + difference / 2,
+      y: point.y + difference / 2
+    }
+
+    tail.bounds = {
+      top: tail.coords.y,
+      bottom: tail.coords.y + tail.size,
+      left: tail.coords.x,
+      right: tail.coords.x + tail.size
+    }
+
+    if (index > 10) {
+      // not worth checking the collision before this really ... This may just be lazy though 
+      let withinY = snake.bounds.top <= tail.bounds.bottom && snake.bounds.bottom >= tail.bounds.top;
+      let withinX = snake.bounds.right >= tail.bounds.left && snake.bounds.left <= tail.bounds.right;
+
+      if (withinX && withinY) {
+        stop = true;
+        debugger;
+      }
+    }
+
+    // if boundaries of tail coords plus box size confllict with head ..
+    // stop = true;
+
+    context.fillRect(tail.coords.x, tail.coords.y, tail.size, tail.size);
   }
 
   function updateDirection(data: string) {
@@ -302,8 +347,6 @@ export default function Gameboy() {
     var x = 0;
     var y = 0;
 
-    var modifier = 200;
-
     switch (snake.direction) {
       case "L":
         x = -squareCanvasSize / modifier;
@@ -324,8 +367,11 @@ export default function Gameboy() {
     updateSnake(x, y);
     updateFood();
 
-    if (start) {
+    if (start && stop == false) {
       requestAnimationFrame(animate);
+    }
+    else if (stop == true) {
+      debugger;
     }
   }
 
