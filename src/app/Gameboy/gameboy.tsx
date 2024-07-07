@@ -130,10 +130,6 @@ export default function Gameboy() {
     var h = canvasContainer.clientHeight;
     var w = canvasContainer.clientWidth;
 
-    if (h < 400) {
-      modifier = modifier * 0.7;
-    }
-
     var screenAverage = h * 2 / 2;
 
     snake.size = (screenAverage * .06);
@@ -269,6 +265,12 @@ export default function Gameboy() {
         newTail.parent = snake.tail.length == 0 ? snake : snake.tail[snake.tail.length - 1];
         snake.tail.push(newTail);
 
+        // TODO: update score board
+        var scoreBoard = document.getElementById("Score");
+        if (scoreBoard != null) {
+          scoreBoard.innerText = `Score: ${snake.tail.length}`;
+        }
+
         // on snake collision 
         food.size = snake.size * .75;
         food.coords.x = (maxRender != null && minRender != null) ? Math.random() * (maxRender - minRender) + minRender : 0;
@@ -386,6 +388,7 @@ export default function Gameboy() {
     <div className={styles.gameboy}>
       <div className={styles.screen_nest} id="Screen_Nest">
         <canvas className={styles.screen} ref={canvasRef} />
+        <div className={styles.scoreOverlay} id="Score">Score: 0</div>
       </div>
       <Dpad sendDirectionToGameboy={updateDirection} />
       <div className={styles.ab}>
@@ -403,6 +406,10 @@ export default function Gameboy() {
             </div>
           </button>
         </div>
+      </div>
+      <div className={styles.startselect}>
+        <div className={styles.start}></div>
+        <div className={styles.select}></div>
       </div>
     </div>
   )
