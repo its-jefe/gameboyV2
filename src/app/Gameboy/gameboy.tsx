@@ -79,7 +79,8 @@ const handleMouseLeave = (e: MouseEvent<HTMLDivElement>) => {
 export default function Gameboy() {
 
   var stop = false;
-  var modifier = 70;
+
+  var modifier = 100;
 
   /* // Resize functionality 
   // const handleResize = useCallback(
@@ -129,10 +130,16 @@ export default function Gameboy() {
     var h = canvasContainer.clientHeight;
     var w = canvasContainer.clientWidth;
 
+    if (h < 400) {
+      modifier = modifier * 0.7;
+    }
+
     var screenAverage = h * 2 / 2;
 
     snake.size = (screenAverage * .06);
     setSquareCanvasSize(screenAverage);
+
+    debugger;
 
     //i.e. value other than null or undefined
     if (canvasRef.current) {

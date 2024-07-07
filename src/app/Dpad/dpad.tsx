@@ -1,6 +1,6 @@
 'use client'
 import styles from "../page.module.css";
-import { MouseEvent } from "react";
+import { MouseEvent, TouchEvent } from "react";
 
 export default function DPad({sendDirectionToGameboy}: any) {
 
@@ -86,6 +86,37 @@ export default function DPad({sendDirectionToGameboy}: any) {
     // upButton.style.color = "rgb(105, 105, 105)";
     // rightButton.style.color = "rgb(105, 105, 105)";
     // downButton.style.color = "rgb(105, 105, 105)";  
+  };
+
+  const handleTouch = (e: TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    
+    var touch = e.nativeEvent.touches[0] || e.nativeEvent.changedTouches[0];
+    var x = touch.pageX;
+    var y = touch.pageY;
+
+
+    let newDir = "";
+
+    let target = e.currentTarget;
+    let rect = target.getBoundingClientRect();
+    
+    let posX = x - rect.left; //x position within the element.
+    let posY = y - rect.top;  //y position within the element.
+    
+    percentX = Math.floor(posX * 100 / rect.width + 1 - 50) / 10;
+    percentY = Math.floor(posY * 100 / rect.height + 1 - 50) / 10;
+    
+    if (Math.abs(percentX) > Math.abs(percentY)) {
+      newDir = percentX > 0 ? "R" : "L";
+    }
+    else if (Math.abs(percentY) > Math.abs(percentX)) {
+      newDir = percentY > 0 ? "D" : "U";
+    }
+    
+    handleInput(newDir);
+
+    target.style.transform = `rotateX(${-percentY}deg) rotateY(${percentX}deg)`;
   }
 
   function handleInput (newDir : string) {
@@ -154,10 +185,10 @@ export default function DPad({sendDirectionToGameboy}: any) {
       currentDir = newDir;
       sendDirectionToGameboy(newDir as string);
     }
-  }
+  };
 
   return (
-    <div className={styles.dpad} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+    <div className={styles.dpad} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} onTouchMove={handleTouch}>
       <div className={styles.dpad_top} >
         <div className={styles.dpad_top_transparent} >
           <button className={`${styles.up_button}`}>
