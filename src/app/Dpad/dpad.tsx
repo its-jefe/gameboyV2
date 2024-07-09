@@ -1,6 +1,6 @@
 'use client'
 import styles from "../page.module.css";
-import { MouseEvent, TouchEvent, KeyboardEvent, useEffect } from "react";
+import { MouseEvent, TouchEvent } from "react";
 
 export default function DPad({ sendDirectionToGameboy, doc }: any) {
 
@@ -32,7 +32,6 @@ export default function DPad({ sendDirectionToGameboy, doc }: any) {
       }
     })
   }
-
 
   let currentDir = "";
   let percentX = 0;
