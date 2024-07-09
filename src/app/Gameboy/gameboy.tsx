@@ -22,7 +22,7 @@
       - Maybe I need to do this dynamically and grab the coordinates that the head is on when it collects the food 
 */
 
-import React, { useState, useEffect, useReducer, useCallback, useRef, MouseEvent } from "react";
+import React, { useState, useEffect, KeyboardEvent, useRef, MouseEvent } from "react";
 import Dpad from "../Dpad/dpad"
 import styles from "../page.module.css";
 // import { userAgent } from "next/server";
@@ -386,7 +386,7 @@ export default function Gameboy() {
         <canvas className={styles.screen} ref={canvasRef} />
         <div className={styles.scoreOverlay} id="Score">Score: 0</div>
       </div>
-      <Dpad sendDirectionToGameboy={updateDirection} />
+      <Dpad sendDirectionToGameboy={updateDirection}/>
       <div className={styles.ab}>
         <div className={`${styles.a_button_nest}`}>
           <button className={styles.a_button}>

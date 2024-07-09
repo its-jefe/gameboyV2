@@ -1,87 +1,91 @@
 'use client'
 import styles from "../page.module.css";
-import { MouseEvent, TouchEvent } from "react";
+import { MouseEvent, TouchEvent, KeyboardEvent, useEffect } from "react";
 
-export default function DPad({sendDirectionToGameboy}: any) {
+export default function DPad({ sendDirectionToGameboy, doc }: any) {
 
   // TODO: 
   // fix the interchange of mouse and keys. it resets the ui ... niche git
   // make sure the button pressure effect relates to the active direction when no mouse is over
 
   // if (document != null) {
-  //   document.addEventListener("keydown", (e: KeyboardEvent) => {
-  //     var keyCode = e.code;
-  
-  //     switch (keyCode) {
-  //       case "ArrowLeft" /* LEFT */: 
-  //         handleInput("L");
-  //       break;
-  //       case "ArrowUp" /* UP */: 
-  //         handleInput("U");
-  //       break;
-  //       case "ArrowRight" /* RIGHT */: 
-  //         handleInput("R");
-  //       break;
-  //       case "ArrowDown" /* DOWN */:
-  //         handleInput("D"); 
-  //       break;
-  //     }
-  //   })
+  //  
   // }
+
+  if (typeof window !== 'undefined') {
+    debugger;
+    document.addEventListener("keydown", (e) => {
+      var keyCode = e.code;
+      switch (keyCode) {
+        case "ArrowLeft" /* LEFT */:
+          handleInput("L");
+          break;
+        case "ArrowUp" /* UP */:
+          handleInput("U");
+          break;
+        case "ArrowRight" /* RIGHT */:
+          handleInput("R");
+          break;
+        case "ArrowDown" /* DOWN */:
+          handleInput("D");
+          break;
+      }
+    })
+  }
 
 
   let currentDir = "";
   let percentX = 0;
   let percentY = 0;
-  
+
   let leftButtonObserved = false;
   let upButtonObserved = false;
   let rightButtonObserved = false;
   let downButtonObserved = false;
 
-  let leftButton : HTMLDivElement; // = document.querySelector(`#dpad_left`) as HTMLDivElement;
-  let upButton : HTMLDivElement; //  = document.querySelector(`#dpad_up`) as HTMLDivElement;
-  let rightButton : HTMLDivElement; //  = document.querySelector(`#dpad_right`) as HTMLDivElement;
-  let downButton : HTMLDivElement; //  = document.querySelector(`#dpad_down`) as HTMLDivElement;
+  let leftButton: HTMLDivElement; // = document.querySelector(`#dpad_left`) as HTMLDivElement;
+  let upButton: HTMLDivElement; //  = document.querySelector(`#dpad_up`) as HTMLDivElement;
+  let rightButton: HTMLDivElement; //  = document.querySelector(`#dpad_right`) as HTMLDivElement;
+  let downButton: HTMLDivElement; //  = document.querySelector(`#dpad_down`) as HTMLDivElement;
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    
+
     let newDir = "";
 
     let target = e.currentTarget;
     let rect = target.getBoundingClientRect();
-    
+
     let posX = e.clientX - rect.left; //x position within the element.
     let posY = e.clientY - rect.top;  //y position within the element.
-    
+
     percentX = Math.floor(posX * 100 / rect.width + 1 - 50) / 10;
     percentY = Math.floor(posY * 100 / rect.height + 1 - 50) / 10;
-    
+
     if (Math.abs(percentX) > Math.abs(percentY)) {
       newDir = percentX > 0 ? "R" : "L";
     }
     else if (Math.abs(percentY) > Math.abs(percentX)) {
       newDir = percentY > 0 ? "D" : "U";
     }
-    
+
     handleInput(newDir);
 
     target.style.transform = `rotateX(${-percentY}deg) rotateY(${percentX}deg)`;
   };
 
-  const handleMouseLeave =  (e: MouseEvent<HTMLDivElement>) => {
+  const handleMouseLeave = (e: MouseEvent<HTMLDivElement>) => {
     // ez
-    if (currentDir == "L"){
+    if (currentDir == "L") {
       rightButton.style.color = "rgb(105, 105, 105)";
     }
-    if (currentDir == "R"){
+    if (currentDir == "R") {
       leftButton.style.color = "rgb(105, 105, 105)";
     }
-    if (currentDir == "U"){
+    if (currentDir == "U") {
       downButton.style.color = "rgb(105, 105, 105)";
     }
-    if (currentDir == "D"){
+    if (currentDir == "D") {
       upButton.style.color = "rgb(105, 105, 105)";
     }
     // let target = e.currentTarget;
@@ -93,7 +97,7 @@ export default function DPad({sendDirectionToGameboy}: any) {
 
   const handleTouch = (e: TouchEvent<HTMLDivElement>) => {
     e.preventDefault();
-    
+
     var touch = e.nativeEvent.touches[0] || e.nativeEvent.changedTouches[0];
     var x = touch.pageX;
     var y = touch.pageY;
@@ -103,36 +107,36 @@ export default function DPad({sendDirectionToGameboy}: any) {
 
     let target = e.currentTarget;
     let rect = target.getBoundingClientRect();
-    
+
     let posX = x - rect.left; //x position within the element.
     let posY = y - rect.top;  //y position within the element.
-    
+
     percentX = Math.floor(posX * 100 / rect.width + 1 - 50) / 10;
     percentY = Math.floor(posY * 100 / rect.height + 1 - 50) / 10;
-    
+
     if (Math.abs(percentX) > Math.abs(percentY)) {
       newDir = percentX > 0 ? "R" : "L";
     }
     else if (Math.abs(percentY) > Math.abs(percentX)) {
       newDir = percentY > 0 ? "D" : "U";
     }
-    
+
     handleInput(newDir);
 
     target.style.transform = `rotateX(${-percentY}deg) rotateY(${percentX}deg)`;
   }
 
-  function handleInput (newDir : string) {
-    if (!leftButtonObserved){
+  function handleInput(newDir: string) {
+    if (!leftButtonObserved) {
       leftButton = document.querySelector(`#dpad_left`) as HTMLDivElement;
     }
-    if (!upButtonObserved){
+    if (!upButtonObserved) {
       upButton = document.querySelector(`#dpad_up`) as HTMLDivElement;
     }
-    if (!rightButtonObserved){
+    if (!rightButtonObserved) {
       rightButton = document.querySelector(`#dpad_right`) as HTMLDivElement;
     }
-    if (!downButtonObserved){
+    if (!downButtonObserved) {
       downButton = document.querySelector(`#dpad_down`) as HTMLDivElement;
     }
 
@@ -163,7 +167,7 @@ export default function DPad({sendDirectionToGameboy}: any) {
         break;
     }
 
-    if (newDir != "" && currentDir != newDir){
+    if (newDir != "" && currentDir != newDir) {
       if (currentDir == "R" && newDir == "L") {
         rightButton.style.color = "rgba(113, 255, 194, 0.5)";
         leftButton.style.color = "rgb(105, 33, 33)";
