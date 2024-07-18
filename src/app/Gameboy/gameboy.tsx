@@ -276,10 +276,10 @@ export default function Gameboy() {
 
       var left = snakeBounds.left < foodBounds.right && snakeBounds.left > foodBounds.left ? 1 : 0;
       var right = snakeBounds.right < foodBounds.right && snakeBounds.right > foodBounds.left ? 1 : 0;
-      var lrbetween = left + right == 0 && snakeBounds.left <= foodBounds.left && snakeBounds.right >= foodBounds.right ? 1 : 0;
+      var lrbetween = left + right == 0 && snakeBounds.left < foodBounds.left && snakeBounds.right > foodBounds.right ? 1 : 0;
       var top = snakeBounds.top < foodBounds.bottom && snakeBounds.top > foodBounds.top ? 1 : 0;
       var bottom = snakeBounds.bottom > foodBounds.top && snakeBounds.top < foodBounds.top ? 1 : 0;
-      var tbbetween = top + bottom == 0 && snakeBounds.top < foodBounds.top && snakeBounds.bottom >= foodBounds.bottom ? 1 : 0;
+      var tbbetween = top + bottom == 0 && snakeBounds.top < foodBounds.top && snakeBounds.bottom > foodBounds.bottom ? 1 : 0;
 
       // // THIS ONLY WORKS WHEN THE SNAKE IS NOT TELEPORTING TRHOUGH WALL
       // var withinX = (snake.bounds.left <= foodBounds.right && snake.bounds.right >= foodBounds.left)
