@@ -383,6 +383,7 @@ export default function Gameboy() {
   function updateDirection(data: string) {
     setStart(true);
 
+    debugger;
     if (!snake.direction) {
       animate();
     }
@@ -398,7 +399,6 @@ export default function Gameboy() {
       if (data == "L") return;
     }
     if (snake.direction == "U") {
-      debugger;
       if (data == "D") return;
     }
     if (snake.direction == "D") {
