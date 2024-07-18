@@ -32,6 +32,12 @@ class Coordinates {
   y: number = 0;
 }
 
+class MoveHistory {
+  x: number = 0;
+  y: number = 0;
+  direction: string | null = null;
+}
+
 class Boundaries {
   top: number = 0;
   bottom: number = 0;
@@ -46,7 +52,7 @@ class Snake {
   initialized: boolean = false;
   tail: Tail[] = new Array();
   direction: string | null = null;
-  moveHistory: Coordinates[] = new Array() // I cannot rely on this in the instance that food is gathered before 50 moves/frames
+  moveHistory: MoveHistory[] = new Array();
 }
 
 // TODO: Will need to allow the tail elements to move off of the length of this array ... 
@@ -79,7 +85,6 @@ const handleMouseLeave = (e: MouseEvent<HTMLDivElement>) => {
 export default function Gameboy() {
 
   var stop = false;
-
   var modifier = 100;
 
   /* // Resize functionality 
@@ -163,13 +168,21 @@ export default function Gameboy() {
       //   debugger;
       //   snake.moveHistory.shift();
       // }
-      snake.moveHistory.push(updateCoords);
 
+      let updateHistory = new MoveHistory();
+
+      updateHistory.x = snake.coords.x;
+      updateHistory.y = snake.coords.y;
+      updateHistory.direction = snake.direction;
+
+      snake.moveHistory.push(updateHistory);
+
+      // ((((snake.coords.x + (x)) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize)
       snake.bounds = {
-        top: snake.coords.y,
-        bottom: snake.coords.y + snake.size,
-        left: snake.coords.x,
-        right: snake.coords.x + snake.size
+        top: (((snake.coords.y % squareCanvasSize) + squareCanvasSize) % squareCanvasSize),
+        bottom: ((((snake.coords.y + snake.size) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize),
+        left: (((snake.coords.x % squareCanvasSize) + squareCanvasSize) % squareCanvasSize),
+        right: ((((snake.coords.x + snake.size) % squareCanvasSize) + squareCanvasSize) % squareCanvasSize),
       }
 
       let i = 0;
@@ -254,10 +267,29 @@ export default function Gameboy() {
         right: food.coords.x + food.size
       };
 
-      var withinX = (snake.bounds.left <= foodBounds.right && snake.bounds.right >= foodBounds.left)
-      var withinY = (snake.bounds.top <= foodBounds.bottom && snake.bounds.bottom >= foodBounds.top)
+      var snakeBounds = {
+        top: snake.coords.y,
+        bottom: (snake.coords.y + snake.size) % squareCanvasSize, 
+        left: snake.coords.x,
+        right: (snake.coords.x + snake.size) % squareCanvasSize
+      }
 
-      if (withinX && withinY) {
+      var left = snakeBounds.left < foodBounds.right && snakeBounds.left > foodBounds.left ? 1 : 0;
+      var right = snakeBounds.right < foodBounds.right && snakeBounds.right > foodBounds.left ? 1 : 0;
+      var lrbetween = left + right == 0 && snakeBounds.left <= foodBounds.left && snakeBounds.right >= foodBounds.right ? 1 : 0;
+      var top = snakeBounds.top < foodBounds.bottom && snakeBounds.top > foodBounds.top ? 1 : 0;
+      var bottom = snakeBounds.bottom > foodBounds.top && snakeBounds.top < foodBounds.top ? 1 : 0;
+      var tbbetween = top + bottom == 0 && snakeBounds.top < foodBounds.top && snakeBounds.bottom >= foodBounds.bottom ? 1 : 0;
+
+      // // THIS ONLY WORKS WHEN THE SNAKE IS NOT TELEPORTING TRHOUGH WALL
+      // var withinX = (snake.bounds.left <= foodBounds.right && snake.bounds.right >= foodBounds.left)
+      // var withinY = (snake.bounds.top <= foodBounds.bottom && snake.bounds.bottom >= foodBounds.top)
+      // // TODO: 
+      //   // I need a better calculation 
+
+      var within = left + right + top + bottom + lrbetween + tbbetween >= 2; // (left + right + top + bottom) >= 2 // || withinX && withinY;
+
+      if (within) {
         let newTail = new Tail();
 
         newTail.parent = snake.tail.length == 0 ? snake : snake.tail[snake.tail.length - 1];
@@ -324,6 +356,28 @@ export default function Gameboy() {
     // stop = true;
 
     context.fillRect(tail.coords.x, tail.coords.y, tail.size, tail.size);
+
+    let yPeek = false;
+    let xPeek = false;
+
+    if (tail.coords.x > squareCanvasSize - tail.size) {
+      xPeek = true;
+      // context.fillStyle = "purple";
+      context.fillRect(0 - (squareCanvasSize - tail.coords.x), tail.coords.y, tail.size, tail.size);
+    }
+
+    if (tail.coords.y > squareCanvasSize - tail.size) {
+      yPeek = true;
+      // context.fillStyle = "purple";
+      context.fillRect(tail.coords.x, 0 - (squareCanvasSize - tail.coords.y), tail.size, tail.size);
+    }
+
+    if (xPeek && yPeek) {
+      // need a 3rd extra renderer to fill the missing diagonal corner...
+      // will this always be the 0,0 corder? I think so ...
+      // context.fillStyle = "purple";
+      context.fillRect(0 - (squareCanvasSize - tail.coords.x), 0 - (squareCanvasSize - tail.coords.y), tail.size, tail.size);
+    }
   }
 
   function updateDirection(data: string) {
@@ -333,10 +387,23 @@ export default function Gameboy() {
       animate();
     }
 
-    if (snake.direction == "L" && data == "R") return;
-    if (snake.direction == "R" && data == "L") return;
-    if (snake.direction == "U" && data == "D") return;
-    if (snake.direction == "D" && data == "U") return;
+    // can I count the distance its moved away from itself ... 
+
+    // i need an average speed ? 
+
+    if (snake.direction == "L") {
+      if (data == "R") return;
+    }
+    if (snake.direction == "R") {
+      if (data == "L") return;
+    }
+    if (snake.direction == "U") {
+      debugger;
+      if (data == "D") return;
+    }
+    if (snake.direction == "D") {
+      if (data == "U") return;
+    }
 
     // this needs to update the dpad visual instead of the dpad itself... 
     // because now you may have pressed a direction and not be allowed to go that way... 
@@ -386,7 +453,7 @@ export default function Gameboy() {
         <canvas className={styles.screen} ref={canvasRef} />
         <div className={styles.scoreOverlay} id="Score">Score: 0</div>
       </div>
-      <Dpad sendDirectionToGameboy={updateDirection}/>
+      <Dpad sendDirectionToGameboy={updateDirection} />
       <div className={styles.ab}>
         <div className={`${styles.a_button_nest}`}>
           <button className={styles.a_button}>

@@ -13,7 +13,6 @@ export default function DPad({ sendDirectionToGameboy, doc }: any) {
   // }
 
   if (typeof window !== 'undefined') {
-    debugger;
     document.addEventListener("keydown", (e) => {
       var keyCode = e.code;
       switch (keyCode) {
